@@ -68,6 +68,7 @@ class StreamController extends Controller
 
     public function postUpload(Request $request){
         $file = $request->file('photo');
+//        var_dump($file);
         if($file->isValid()){
             $tmp = explode(".", $file->getClientOriginalName());
             $filename = $tmp[0]."@".time();
@@ -77,7 +78,7 @@ class StreamController extends Controller
             if($result){
                 $ip = $request->getClientIp();
                 $createData = [
-                    "user" => $ip,
+                    "name" => $ip,
                     "ip" => $ip,
                     "like" => 0,
                     "filename" => $result->getFilename()
