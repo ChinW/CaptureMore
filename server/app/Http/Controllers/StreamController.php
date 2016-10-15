@@ -85,8 +85,8 @@ class StreamController extends Controller
     }
 
     public function postUpload(Request $request){
-        var_dump($request);
-        die(1);
+//        var_dump($request);
+//        die(1);
         $file = $request->file('photo');
         if($file->isValid()){
             $tmp = explode(".", $file->getClientOriginalName());
