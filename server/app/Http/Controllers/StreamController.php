@@ -12,6 +12,8 @@ use App\Providers\HelperServiceProvider;
 use Illuminate\Http\File;
 use Symfony\Component\HttpFoundation;
 
+define("_FILE_UPLOAD_ABSOLUTE_PATH_", public_path()."/upload");
+
 class StreamController extends Controller
 {
     public $db_table = "stream";
@@ -85,8 +87,6 @@ class StreamController extends Controller
     }
 
     public function postUpload(Request $request){
-//        var_dump($request);
-//        die(1);
         $file = $request->file('photo');
         if($file->isValid()){
             $tmp = explode(".", $file->getClientOriginalName());
@@ -106,6 +106,64 @@ class StreamController extends Controller
                 return HelperServiceProvider::success($result->id, "success");
             }
         }
+        return HelperServiceProvider::error(null, "error");
+    }
+
+    function base64_to_file($base64_string, $output_file) {
+        $ifp = fopen($output_file, "wb");
+        $data = explode(',', $base64_string);
+//        var_dump($base64_string, $output_file);
+        fwrite($ifp, base64_decode($data[1]));
+        fclose($ifp);
+        return $output_file;
+    }
+
+    public function postUpload64(Request $request){
+        $photo = $request->input("photo");
+        $newname = time()."@".rand(1, 1000).".jpg";
+        $tags = ["anger", "contempt", "disgust", "fear", "happiness", "neutral", "sadness", "surprise"];
+        $tagValue = [];
+        $mainTag = "";
+        $currentValue = 0;
+
+        foreach ($tags as $tag){
+            $v =  $request->input($tag, 0);
+            var_dump($v);
+            if($v >= $currentValue){
+                $mainTag = $tag;
+                $currentValue = $v;
+            }
+        }
+//
+//        $anger = $request->input("anger");
+//        $contempt = $request->input("contempt");
+//        $disgust = $request->input("disgust");
+//        $fear = $request->input("fear");
+//        $happiness = $request->input("happiness");
+//        $neutral = $request->input("neutral");
+//        $sadness = $request->input("sadness");
+//        $surprise = $request->input("surprise");
+
+        if(file_exists(_FILE_UPLOAD_ABSOLUTE_PATH_.$newname)){
+            HelperServiceProvider::error(null, "生成文件名发生碰撞");
+        }else{
+            $this->base64_to_file($photo, _FILE_UPLOAD_ABSOLUTE_PATH_."/".$newname);
+
+            $ip = $request->getClientIp();
+            $createData = [
+                "name" => $ip,
+                "ip" => $ip,
+                "like" => 0,
+                "filename" => $newname,
+                "main_character" => $mainTag
+            ];
+            foreach ($tags as $tag){
+                $createData[$tag] = $request->input($tag, 0);
+            }
+            $result = Stream::create($createData);
+            return HelperServiceProvider::success($result->id, "success");
+        }
+
         return HelperServiceProvider::error(null, "error");
     }
 }

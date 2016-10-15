@@ -11,6 +11,7 @@ class Stream extends Model
     * 可以被批量赋值的属性. *
     * @var array
     */
-    protected $fillable = ['name', "ip", "like", "filename", "created_at", "updated_at"];
+    protected $fillable = ['name', "ip", "like", "filename", "main_character", "anger", "anger", "contempt", "disgust",
+"fear", "happiness", "neutral", "sadness", "surprise", "created_at", "updated_at"];
     
 }
