@@ -1,6 +1,6 @@
 ## 1. 用户点数
 
-每张照片得到的点数 ＝ Int(表情的数值就是从API上返回的表情的数值)＊10
+每张照片得到的点数 ＝ Int(表情的数值就是从API上返回的表情的数值＊10)
 
 例如:
 
@@ -33,3 +33,57 @@
 当用户某项数值提升超过MAX时，能量爆满，获取“今日头衔”（负能量星球／伤心1999/寂寞也不要人陪／.../开心的美少女）
 
 > MAX值可以先设定为50
+
+## 2. APIs
+
+### 2.1 List
+
+POST `http://python.dog/stream/list`
+
+返回如下
+
+>filename的前缀地址是`http://python.dog/upload/`
+
+```
+{
+  "status": 0,
+  "data": [
+    {
+      "id": 1,
+      "name": "",
+      "filename": "example_011@1476523179.pdf",
+      "ip": "192.168.10.1",
+      "like": 0,
+      "created_at": "2016-10-15 17:19:39",
+      "updated_at": "2016-10-15 17:19:39"
+    },
+    {
+      "id": 2,
+      "name": "",
+      "filename": "example_011@1476523186.pdf",
+      "ip": "192.168.10.1",
+      "like": 0,
+      "created_at": "2016-10-15 17:19:46",
+      "updated_at": "2016-10-15 17:19:46"
+    },
+    {
+      "id": 3,
+      "name": "",
+      "filename": "example_011@1476523187.pdf",
+      "ip": "192.168.10.1",
+      "like": 0,
+      "created_at": "2016-10-15 17:19:47",
+      "updated_at": "2016-10-15 17:19:47"
+    }
+  ],
+  "info": "success"
+}
+```
+
+### 2.2 Upload
+
+POST `http://python.dog/stream/upload`
+
+| Key | Value |Notice|
+|:---|:---|:---|
+| photo | form-data形式的文件 | ／ |
