@@ -1,5 +1,23 @@
 <?php
 
+if(isset($_SERVER["HTTP_HOST"]) && in_array(substr($_SERVER["HTTP_HOST"], 0, 5), ["local", "192.1", "127.0", "simil"])){
+    $mysql = [
+        'host' => env('DB_HOST', 'localhost'),
+        'port' => env('DB_PORT', '3306'),
+        'database' => env('DB_DATABASE', 'simile'),
+        'username' => env('DB_USERNAME', 'homestead'),
+        'password' => env('DB_PASSWORD', 'secret'),
+    ];
+}else{
+    $mysql = [
+        'host' => env('DB_HOST', 'localhost'),
+        'port' => env('DB_PORT', '3306'),
+        'database' => env('DB_DATABASE', 'root'),
+        'username' => env('DB_USERNAME', 'simile'),
+        'password' => env('DB_PASSWORD', 'Hello123'),
+    ];
+}
+
 return [
 
     /*
@@ -54,10 +72,10 @@ return [
 
         'mysql' => [
             'driver'    => 'mysql',
-            'host'      => env('DB_HOST', 'localhost'),
-            'database'  => env('DB_DATABASE', 'simile'),
-            'username'  => env('DB_USERNAME', 'homestead'),
-            'password'  => env('DB_PASSWORD', 'secret'),
+            'host' => $mysql["host"],
+            'database' => $mysql["database"],
+            'username' => $mysql["username"],
+            'password' => $mysql["password"],
             'charset'   => 'utf8',
             'collation' => 'utf8_unicode_ci',
             'prefix'    => '',
