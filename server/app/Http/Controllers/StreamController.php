@@ -57,18 +57,37 @@ class StreamController extends Controller
     }
 
     public function postList(Request $request){
+        $tag = $request->input("tag", null);
         $result = DB::table($this->db_table)
             ->select($this->db_table.".*")
-            ->get();
+            ->orderBy("id", "desc");
+        if($tag) {
+            $result->where("main_character", $tag);
+        }
+        $result = $result->limit(100)->get();
+//            ->get();
 //            ->leftJoin("lec_user", "lec_user.id", "=", $this->db_table.".user_id")
 //            ->where("lec_user.department_id", $departmentIdOfUser)
 //            ->paginate(HelperServiceProvider::$PAGE_ITEMS);
         return HelperServiceProvider::success($result, "success");
     }
 
+    public function postLike(Request $request){
+        $id = $request->input("id", 0);
+        if($id > 0){
+            if($record = Stream::find($id)){
+                $record->like = $record->like + 1;
+                $record->save();
+                return HelperServiceProvider::success(["id"=>$id, "like"=>$record->like], "success");
+            }
+        }
+        return HelperServiceProvider::error(null, "error");
+    }
+
     public function postUpload(Request $request){
+        var_dump($request);
+        die(1);
         $file = $request->file('photo');
-//        var_dump($file);
         if($file->isValid()){
             $tmp = explode(".", $file->getClientOriginalName());
             $filename = $tmp[0]."@".time();

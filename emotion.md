@@ -87,3 +87,15 @@ POST `http://python.dog/stream/upload`
 | Key | Value |Notice|
 |:---|:---|:---|
 | photo | form-data形式的文件 | ／ |
+
+
+## 3. 色彩
+
+"anger": #D50000,
+"contempt": #AA00FF,
+"disgust": #311B92,
+"fear": #1A237E,
+"happiness": #1DE9B6,
+"neutral": #558B2F,
+"sadness": #616161,
+"surprise": #F9A825
