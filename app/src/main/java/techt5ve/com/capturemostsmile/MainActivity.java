@@ -735,7 +735,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 mBarChart.setValues(indicesByKind);
 
-                mCapturedImage.post(new Runnable() {
+                mMarkView.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         final File f = save();
@@ -746,7 +746,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             }
                         }.start();
                     }
-                });
+                }, 2000);
             }
 
             @Override

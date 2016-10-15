@@ -61,7 +61,7 @@ public class MarkView extends FrameLayout {
         view.setLayoutParams(lp);
         view.animate().alpha(1).translationY(0).scaleX(0.6f).scaleY(0.6f)
                 .setStartDelay(mMarks.indexOf(item) * 150)
-                .setDuration(1000)
+                .setDuration(600)
                 .setInterpolator(new OvershootInterpolator(3.f))
                 .start();
     }

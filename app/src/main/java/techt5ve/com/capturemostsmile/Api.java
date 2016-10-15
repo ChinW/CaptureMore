@@ -13,7 +13,6 @@ import com.microsoft.projectoxford.emotion.rest.EmotionServiceException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -21,8 +20,6 @@ import java.util.List;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -96,11 +93,11 @@ public class Api {
                 .add("anger", "" + values[0])
                 .add("contempt", "" + values[1])
                 .add("disgust", "" + values[2])
-                .add("fear", "" + values[2])
-                .add("happiness", "" + values[2])
-                .add("neutral", "" + values[2])
-                .add("sadness", "" + values[2])
-                .add("surprise", "" + values[2])
+                .add("fear", "" + values[3])
+                .add("happiness", "" + values[4])
+                .add("neutral", "" + values[5])
+                .add("sadness", "" + values[6])
+                .add("surprise", "" + values[7])
                 .add("photo", "data:image/jpg;base64," + imgStr)
                 .build();
         Request request = new Request.Builder()
