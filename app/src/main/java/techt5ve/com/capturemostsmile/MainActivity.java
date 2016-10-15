@@ -1,6 +1,7 @@
 package techt5ve.com.capturemostsmile;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -21,9 +22,11 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -33,19 +36,18 @@ import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.microsoft.projectoxford.emotion.contract.RecognizeResult;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,7 +59,9 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = "MainActivity";
+    private static final String DEFAULT_JPG_NAME = "captured.jpg";
+    private static final String DEFAULT_SHARE_NAME = "share.jpg";
 
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
 
@@ -74,8 +78,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int STATE_WAITING_NON_PRECAPTURE = 3;
     private static final int STATE_PICTURE_TAKEN = 4;
 
-    private static final int MAX_PREVIEW_WIDTH = 1920;
-    private static final int MAX_PREVIEW_HEIGHT = 1080;
+    private static int MAX_PREVIEW_WIDTH = 1920;
+    private static int MAX_PREVIEW_HEIGHT = 1080;
 
     private final TextureView.SurfaceTextureListener mSurfaceTextureListener
             = new TextureView.SurfaceTextureListener() {
@@ -106,11 +110,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private MarkView mMarkView;
     private ImageView mCapturedImage;
     private ImageButton mUndoButton;
+    private ImageButton mShareButton;
+    private ImageButton mSwitchButton;
     private CameraCaptureSession mCaptureSession;
+    private BarChart mBarChart;
 
     private String mCameraId;
     private CameraDevice mCameraDevice;
     private Size mPreviewSize;
+    private boolean mFrontFacing;
 
     private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
 
@@ -149,6 +157,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onImageAvailable(ImageReader reader) {
+            Log.d(TAG, "onImageAvailable: on " + Thread.currentThread());
             mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
         }
 
@@ -235,15 +244,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mCaptureButton = (ImageButton) findViewById(R.id.capture);
+        MAX_PREVIEW_WIDTH = getResources().getDisplayMetrics().widthPixels;
+        MAX_PREVIEW_HEIGHT = getResources().getDisplayMetrics().heightPixels;
+
+        mCaptureButton = (ImageButton) findViewById(R.id.captureButton);
         mCaptureButton.setOnClickListener(this);
         mTextureView = (AutoFitTextureView) findViewById(R.id.texture);
         mMarkView = (MarkView) findViewById(R.id.mark);
         mCapturedImage = (ImageView) findViewById(R.id.capturedImage);
         mUndoButton = (ImageButton) findViewById(R.id.undoButton);
         mUndoButton.setOnClickListener(this);
+        mShareButton = (ImageButton) findViewById(R.id.shareButton);
+        mShareButton.setOnClickListener(this);
+        mSwitchButton = (ImageButton) findViewById(R.id.switchButton);
+        mSwitchButton.setOnClickListener(this);
+        mBarChart = (BarChart) findViewById(R.id.barChart);
 
-        mFile = new File(getExternalFilesDir(null), "pic.jpg");
+        mFile = new File(getExternalFilesDir(null), DEFAULT_JPG_NAME);
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        startBackgroundThread();
+
+        if (mTextureView.isAvailable()) {
+            openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+        } else {
+            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        closeCamera();
+        stopBackgroundThread();
+        super.onPause();
     }
 
     private void showToast(final String text) {
@@ -304,25 +341,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        startBackgroundThread();
-
-        if (mTextureView.isAvailable()) {
-            openCamera(mTextureView.getWidth(), mTextureView.getHeight());
-        } else {
-            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
-        }
-    }
-
-    @Override
-    public void onPause() {
-        closeCamera();
-        stopBackgroundThread();
-        super.onPause();
-    }
-
     /**
      * Sets up member variables related to camera.
      *
@@ -333,13 +351,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try {
             for (String cameraId : manager.getCameraIdList()) {
-                CameraCharacteristics characteristics
-                        = manager.getCameraCharacteristics(cameraId);
+                CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
 
                 // We don't use a front facing camera in this sample.
                 Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    continue;
+
+                if (!mFrontFacing) {
+                    if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                        continue;
+                    }
+                } else {
+                    if (facing == null || facing != CameraCharacteristics.LENS_FACING_FRONT) {
+                        continue;
+                    }
                 }
 
                 StreamConfigurationMap map = characteristics.get(
@@ -543,7 +567,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 mPreviewRequest = mPreviewRequestBuilder.build();
                                 mCaptureSession.setRepeatingRequest(mPreviewRequest,
                                         mCaptureCallback, mBackgroundHandler);
-                            } catch (CameraAccessException e) {
+                            } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
@@ -596,7 +620,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Initiate a still image capture.
      */
     private void takePicture() {
-        lockFocus();
+        if (mFrontFacing) {
+            captureStillPicture();
+        } else {
+            lockFocus();
+        }
     }
 
     /**
@@ -664,10 +692,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session,
                                                @NonNull CaptureRequest request,
                                                @NonNull TotalCaptureResult result) {
-                    showToast("Saved: " + mFile);
                     Log.d(TAG, mFile.toString());
                     unlockFocus();
-                    parseAndRecognize();
                 }
             };
 
@@ -678,40 +704,77 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void parseAndRecognize() {
-        mTextureView.postDelayed(new Runnable() {
+    private void recognize(final File file) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 4;
+        final Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+        if (bitmap == null) {
+            return;
+        }
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, os);
+        Api.recognize(new ByteArrayInputStream(os.toByteArray()), bitmap.getWidth(), bitmap.getHeight(), new Api.RecognitionListener() {
             @Override
-            public void run() {
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inSampleSize = 4;
-                final Bitmap scaledBitmap = BitmapFactory.decodeFile(mFile.getAbsolutePath(), options);
-                try {
-                    File sf = new File(getExternalFilesDir(null), "sf.jpg");
-                    scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, new FileOutputStream(sf));
-                    InputStream is = new FileInputStream(sf);
-                    Api.recognize(is, scaledBitmap.getWidth(), scaledBitmap.getHeight(), new Api.RecognitionListener() {
-                        @Override
-                        public void onSuccess(List<RecognizeResult> results, int orgWidth, int orgHeight) {
-                            mCapturedImage.setImageBitmap(scaledBitmap);
-                            showCapturedImage();
-                            mMarkView.clear();
-                            float scale = (float) mMarkView.getWidth() / orgWidth;
-                            for (RecognizeResult result : results) {
-                                Log.d(TAG, "onSuccess: " + result.faceRectangle.left + ", " + result.faceRectangle.top);
-                                mMarkView.addItem(new Mark(result, scale));
-                            }
-                        }
-
-                        @Override
-                        public void onFailure() {
-                            mMarkView.clear();
-                        }
-                    });
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
+            public void onSuccess(List<RecognizeResult> results, int orgWidth, int orgHeight) {
+                mCapturedImage.setImageBitmap(bitmap);
+                showCapturedImage();
+                mMarkView.clear();
+                float scale = (float) mMarkView.getWidth() / orgWidth;
+                final double[] indicesByKind = {0, 0, 0, 0, 0, 0, 0, 0};
+                for (RecognizeResult result : results) {
+                    Log.d(TAG, "onSuccess: " + result.faceRectangle.left + ", " + result.faceRectangle.top);
+                    mMarkView.addItem(new Mark(result, scale));
+                    indicesByKind[0] += result.scores.anger;
+                    indicesByKind[1] += result.scores.contempt;
+                    indicesByKind[2] += result.scores.disgust;
+                    indicesByKind[3] += result.scores.fear;
+                    indicesByKind[4] += result.scores.happiness;
+                    indicesByKind[5] += result.scores.neutral;
+                    indicesByKind[6] += result.scores.sadness;
+                    indicesByKind[7] += result.scores.surprise;
                 }
+                mBarChart.setValues(indicesByKind);
+
+                mCapturedImage.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Api.upload(save(), indicesByKind);
+                    }
+                });
             }
-        }, 200);
+
+            @Override
+            public void onFailure() {
+                mMarkView.clear();
+            }
+        });
+    }
+
+    private File save() {
+        findViewById(R.id.image_container).buildDrawingCache();
+        Bitmap bitmap = findViewById(R.id.image_container).getDrawingCache();
+        if (bitmap != null) {
+            File shareDir = new File(getExternalFilesDir(null), "share");
+            if (!shareDir.exists()) {
+                shareDir.mkdir();
+            }
+            File file = new File(shareDir, DEFAULT_SHARE_NAME);
+            try {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, new FileOutputStream(file));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            return file;
+        }
+        return null;
+    }
+
+    private void share(File file) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setDataAndType(Uri.fromFile(file), "image/jpg");
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+
+        startActivity(intent);
     }
 
     /**
@@ -759,12 +822,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.capture: {
+            case R.id.captureButton:
                 takePicture();
                 break;
-            }
             case R.id.undoButton:
                 restorePreview();
+                break;
+            case R.id.shareButton:
+                share(save());
+                break;
+            case R.id.switchButton:
+                closeCamera();
+                if (mTextureView.isAvailable()) {
+                    mFrontFacing = !mFrontFacing;
+                    openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+                } else {
+                    mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+                }
+                mSwitchButton.setActivated(!mSwitchButton.isActivated());
                 break;
             default:
                 break;
@@ -776,6 +851,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTextureView.setVisibility(View.INVISIBLE);
         mCapturedImage.setVisibility(View.VISIBLE);
         mUndoButton.setVisibility(View.VISIBLE);
+        mShareButton.setVisibility(View.VISIBLE);
+        mBarChart.setVisibility(View.VISIBLE);
     }
 
     private void restorePreview() {
@@ -785,12 +862,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTextureView.setVisibility(View.VISIBLE);
         mCapturedImage.setVisibility(View.INVISIBLE);
         mUndoButton.setVisibility(View.INVISIBLE);
+        mShareButton.setVisibility(View.INVISIBLE);
+        mBarChart.setVisibility(View.INVISIBLE);
     }
 
     /**
      * Saves a JPEG {@link Image} into the specified {@link File}.
      */
-    static class ImageSaver implements Runnable {
+    class ImageSaver implements Runnable {
 
         /**
          * The JPEG image
@@ -826,6 +905,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         e.printStackTrace();
                     }
                 }
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        recognize(mFile);
+                    }
+                });
             }
         }
 

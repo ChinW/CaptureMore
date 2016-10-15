@@ -8,7 +8,6 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -50,15 +49,21 @@ public class MarkView extends FrameLayout {
 
         view.setAlpha(0);
         view.setTranslationY(200);
+        view.setScaleX(0.1f);
+        view.setScaleY(0.1f);
         addView(view);
         invalidate();
 
         RectF rect = item.getRect();
         LayoutParams lp = (LayoutParams) view.getLayoutParams();
         lp.leftMargin = (int) (rect.left);
-        lp.topMargin = (int) (rect.top - 300);
+        lp.topMargin = (int) (rect.top - 260);
         view.setLayoutParams(lp);
-        view.animate().alpha(1).translationY(0).setDuration(1000).setInterpolator(new OvershootInterpolator(3.f)).start();
+        view.animate().alpha(1).translationY(0).scaleX(0.6f).scaleY(0.6f)
+                .setStartDelay(mMarks.indexOf(item) * 150)
+                .setDuration(1000)
+                .setInterpolator(new OvershootInterpolator(3.f))
+                .start();
     }
 
     @Override
