@@ -1,6 +1,6 @@
 ## 1. 用户点数
 
-每张照片得到的点数 ＝ Int(表情的数值就是从API上返回的表情的数值)＊10
+每张照片得到的点数 ＝ Int(表情的数值就是从API上返回的表情的数值＊10)
 
 例如:
 
@@ -38,11 +38,11 @@
 
 ### 2.1 List
 
-POST `http://121.201.15.116/stream/list`
+POST `http://python.dog/stream/list`
 
 返回如下
 
->filename的前缀地址是`http://121.201.15.116/upload/`
+>filename的前缀地址是`http://python.dog/upload/`
 
 ```
 {
@@ -82,7 +82,7 @@ POST `http://121.201.15.116/stream/list`
 
 ### 2.2 Upload
 
-POST `http://121.201.15.116/stream/upload`
+POST `http://python.dog/stream/upload`
 
 | Key | Value |Notice|
 |:---|:---|:---|
