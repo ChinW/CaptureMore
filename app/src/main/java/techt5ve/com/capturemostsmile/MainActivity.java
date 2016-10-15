@@ -749,6 +749,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
+        if (mFlashSupported) {
+            requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+        }
+    }
+
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -764,13 +771,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
-        if (mFlashSupported) {
-            requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-        }
-    }
-
     private void showCapturedImage() {
         mCaptureButton.setEnabled(false);
         mTextureView.setVisibility(View.INVISIBLE);
@@ -779,6 +779,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void restorePreview() {
+        mMarkView.clear();
         mCaptureButton.setEnabled(true);
         mCapturedImage.setImageBitmap(null);
         mTextureView.setVisibility(View.VISIBLE);
@@ -841,6 +842,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return Long.signum((long) lhs.getWidth() * lhs.getHeight() -
                     (long) rhs.getWidth() * rhs.getHeight());
         }
-
     }
 }

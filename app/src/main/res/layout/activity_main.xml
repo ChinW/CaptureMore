@@ -46,11 +46,11 @@
 
         <ImageButton
             android:id="@+id/undoButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/button_size_small"
+            android:layout_height="@dimen/button_size_small"
             android:layout_gravity="right|center_vertical"
             android:layout_marginRight="@dimen/activity_horizontal_margin"
-            android:background="?selectableItemBackground"
+            android:background="?selectableItemBackgroundBorderless"
             android:src="@drawable/ic_undo_24dp"
             android:visibility="invisible"/>
 

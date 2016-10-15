@@ -8,8 +8,11 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,17 +42,23 @@ public class MarkView extends FrameLayout {
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     }
 
-    public void addItem(Mark item) {
+    public void addItem(final Mark item) {
         mMarks.add(item);
-        View view = LayoutInflater.from(getContext()).inflate(DEFAULT_ITEM_LAYOUT, this, false);
-        ((ImageView) view.findViewById(R.id.mark_emoji)).setImageResource(item.getDrawableRes());
-        LayoutParams lp = (LayoutParams) view.getLayoutParams();
-        RectF rect = item.getRect();
-        lp.leftMargin = (int) (rect.left + (rect.width() - lp.width) / 2);
-        lp.topMargin = (int) (rect.top -= lp.height);
-        view.setLayoutParams(lp);
+        final View view = LayoutInflater.from(getContext()).inflate(DEFAULT_ITEM_LAYOUT, this, false);
+        ((ImageView) view.findViewById(R.id.mark_emoji)).setImageResource(item.getDrawableRes(getResources()));
+        ((TextView) view.findViewById(R.id.mark_label)).setText(item.getLable(getResources()));
+
+        view.setAlpha(0);
+        view.setTranslationY(200);
         addView(view);
         invalidate();
+
+        RectF rect = item.getRect();
+        LayoutParams lp = (LayoutParams) view.getLayoutParams();
+        lp.leftMargin = (int) (rect.left);
+        lp.topMargin = (int) (rect.top - 300);
+        view.setLayoutParams(lp);
+        view.animate().alpha(1).translationY(0).setDuration(1000).setInterpolator(new OvershootInterpolator(3.f)).start();
     }
 
     @Override
