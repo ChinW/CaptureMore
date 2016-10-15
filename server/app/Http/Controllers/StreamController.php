@@ -129,7 +129,7 @@ class StreamController extends Controller
         foreach ($tags as $tag){
             $v =  $request->input($tag, 0);
 //            var_dump($v);
-            if($v >= $currentValue){
+            if($v > $currentValue){
                 $mainTag = $tag;
                 $currentValue = $v;
             }
