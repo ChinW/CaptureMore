@@ -3,6 +3,7 @@ package techt5ve.com.capturemostsmile;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
@@ -13,7 +14,7 @@ import android.view.View;
 
 public class BarChart extends View {
 
-    private int[] mColors = {0xFFD50000, 0xFFAA00FF, 0xFF311B92, 0xFF1A237E, 0xFF1DE9B6, 0xFF558B2F, 0xFF616161, 0xFFF9A825};
+    private int[] mColors = {0xAAD50000, 0xAAAA00FF, 0xAA311B92, 0xAA1A237E, 0xAA1DE9B6, 0xAA558B2F, 0xAA616161, 0xAAF9A825};
     private double[] mValues = {};
     private String[] mLabels = {"anger", "contempt", "disgust", "fear", "happiness", "neutral", "sadness", "surprise"};
     private Paint mPaint;
@@ -75,46 +76,44 @@ public class BarChart extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        drawLabels(canvas);
-        drawBars(canvas);
+        drawLabelsAndBars(canvas);
         drawBaseline(canvas);
     }
 
     private void drawBaseline(Canvas canvas) {
-        mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setStrokeWidth(2);
-        mPaint.setColor(0xFFDDDDDD);
-        canvas.drawLine(0, mHeight, mWidth, mHeight, mPaint);
     }
 
-    private void drawLabels(Canvas canvas) {
-        if (mLabels.length == 0) {
-            return;
-        }
-        int w = mWidth / mLabels.length;
-        for (int i = 0; i < mLabels.length; i++) {
-
-        }
-    }
-
-    private void drawBars(Canvas canvas) {
+    private void drawLabelsAndBars(Canvas canvas) {
         if (mValues.length == 0) {
             return;
         }
-        canvas.save();
+        mPaint.setTextSize(getResources().getDisplayMetrics().scaledDensity * 10);
         int w = mWidth / mLabels.length;
-        float factor = mHeight*20;
+        double maxV = mValues[0];
+        for (int i = 1; i < mValues.length; i++) {
+            if (mValues[i] > maxV) {
+                maxV = mValues[i];
+            }
+        }
+        float factor = (float) ((mHeight - mPaint.getFontSpacing() * 2) / maxV);
         for (int i = 0; i < mLabels.length; i++) {
+            canvas.save();
+            canvas.translate(w * i, 0);
+
             mPaint.setStyle(Paint.Style.FILL);
             mPaint.setColor(mColors[i]);
-            canvas.translate(i * w, 0);
             RectF rectF = new RectF(w * 0.15f, (float) (mHeight - mValues[i] * factor), w * 0.85f, mHeight);
             canvas.drawRect(rectF, mPaint);
+
+            Rect labelBounds = new Rect();
+            mPaint.getTextBounds(mLabels[i], 0, mLabels[i].length(), labelBounds);
+            canvas.drawText(mLabels[i], (w - labelBounds.width()) / 2f, rectF.top + mPaint.ascent(), mPaint);
+
             mPaint.setStyle(Paint.Style.STROKE);
-            mPaint.setColor(0x50000000);
+            mPaint.setColor(0x30000000);
             canvas.drawRect(rectF, mPaint);
+
+            canvas.restore();
         }
-        canvas.restore();
     }
 }

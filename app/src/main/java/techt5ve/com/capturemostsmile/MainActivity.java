@@ -738,7 +738,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mCapturedImage.post(new Runnable() {
                     @Override
                     public void run() {
-                        Api.upload(save(), indicesByKind);
+                        final File f = save();
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                Api.upload(f, indicesByKind);
+                            }
+                        }.start();
                     }
                 });
             }
