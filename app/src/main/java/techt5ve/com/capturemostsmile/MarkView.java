@@ -46,7 +46,7 @@ public class MarkView extends FrameLayout {
 
         final View view = LayoutInflater.from(getContext()).inflate(DEFAULT_ITEM_LAYOUT, this, false);
         ((ImageView) view.findViewById(R.id.mark_emoji)).setImageResource(item.getDrawableRes(getResources()));
-        ((TextView) view.findViewById(R.id.mark_label)).setText(item.getLable(getResources()));
+        ((TextView) view.findViewById(R.id.mark_label)).setText(item.getLabel(getResources()));
 
         view.setAlpha(0);
         view.setTranslationY(200);
