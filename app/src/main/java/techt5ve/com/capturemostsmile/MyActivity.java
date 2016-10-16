@@ -24,23 +24,18 @@ public class MyActivity extends AppCompatActivity {
 
         double[] stored = {0, 0, 0, 0, 0, 0, 0, 0};
 
-        File file = new File(getFilesDir(), "data");
-        InputStream is = null;
+        File file = new File(getExternalFilesDir(null), "data");
+        Scanner scanner = null;
         try {
-            is = new FileInputStream(file);
-            Scanner scanner = new Scanner(is);
+            scanner = new Scanner(new FileInputStream(file));
             for (int i = 0; i < stored.length && scanner.hasNextDouble(); i++) {
                 stored[i] = scanner.nextDouble();
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            if (scanner != null) {
+                scanner.close();
             }
         }
 

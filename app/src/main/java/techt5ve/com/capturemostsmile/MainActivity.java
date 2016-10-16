@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -732,7 +733,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mCapturedImage.setImageBitmap(bitmap);
                 showCapturedImage();
                 mMarkView.clear();
-                float scale = (float) mMarkView.getWidth() / orgWidth;
+                final float scale = (float) mMarkView.getWidth() / orgWidth;
                 final double[] indicesByKind = {0, 0, 0, 0, 0, 0, 0, 0};
                 for (RecognizeResult result : results) {
                     Log.d(TAG, "onSuccess: " + result.faceRectangle.left + ", " + result.faceRectangle.top);
@@ -758,47 +759,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 new Thread() {
                     @Override
                     public void run() {
-                        File data = new File(getFilesDir(), "data");
+                        File data = new File(getExternalFilesDir(null), "data");
                         double[] stored = {0, 0, 0, 0, 0, 0, 0, 0};
                         if (data.exists()) {
-                            InputStream is = null;
+                            Scanner scanner = null;
                             try {
-                                is = new FileInputStream(data);
-                                Scanner scanner = new Scanner(is);
+                                scanner = new Scanner(new FileInputStream(data));
                                 for (int i = 0; scanner.hasNextDouble() && i < stored.length; i++) {
                                     stored[i] = scanner.nextDouble();
                                     stored[i] += indicesByKind[i];
                                 }
                             } catch (FileNotFoundException e) {
                                 e.printStackTrace();
+                                stored = indicesByKind;
                             } finally {
-                                if (is != null) {
-                                    try {
-                                        is.close();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
+                                if (scanner != null) {
+                                    scanner.close();
                                 }
                             }
                         } else {
                             stored = indicesByKind;
                         }
-                        FileOutputStream os = null;
+                        PrintWriter writer = null;
                         try {
-                            os= new FileOutputStream(data);
-                            PrintWriter writer = new PrintWriter(os);
+                            writer = new PrintWriter(new FileOutputStream(data));
                             for (double d : stored) {
                                 writer.println(d);
                             }
                         } catch (FileNotFoundException e) {
                             e.printStackTrace();
                         } finally {
-                            if (os != null) {
-                                try {
-                                    os.close();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+                            if (writer != null) {
+                                writer.close();
                             }
                         }
                     }
