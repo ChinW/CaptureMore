@@ -9,7 +9,7 @@ import android.webkit.WebViewClient;
 
 public class ContainerActivity extends AppCompatActivity {
 
-    private static final String URL = "http://python.dog/";
+    private static final String URL = "http://python.dog/s/";
     private WebView mWebView;
 
     @Override

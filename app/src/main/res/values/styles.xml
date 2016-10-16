@@ -8,4 +8,9 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="AppTheme.Row">
+        <item name="android:minHeight">?listPreferredItemHeightSmall</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
 </resources>

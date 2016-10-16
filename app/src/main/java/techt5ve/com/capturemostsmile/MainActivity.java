@@ -48,15 +48,19 @@ import com.microsoft.projectoxford.emotion.contract.RecognizeResult;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -264,6 +268,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mSwitchButton.setOnClickListener(this);
         mBarChart = (BarChart) findViewById(R.id.barChart);
         findViewById(R.id.exploreButton).setOnClickListener(this);
+        findViewById(R.id.myButton).setOnClickListener(this);
 
         mFile = new File(getExternalFilesDir(null), DEFAULT_JPG_NAME);
     }
@@ -749,6 +754,55 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Api.upload(save(), indicesByKind);
                     }
                 }, 2000);
+
+                new Thread() {
+                    @Override
+                    public void run() {
+                        File data = new File(getFilesDir(), "data");
+                        double[] stored = {0, 0, 0, 0, 0, 0, 0, 0};
+                        if (data.exists()) {
+                            InputStream is = null;
+                            try {
+                                is = new FileInputStream(data);
+                                Scanner scanner = new Scanner(is);
+                                for (int i = 0; scanner.hasNextDouble() && i < stored.length; i++) {
+                                    stored[i] = scanner.nextDouble();
+                                    stored[i] += indicesByKind[i];
+                                }
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            } finally {
+                                if (is != null) {
+                                    try {
+                                        is.close();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                        } else {
+                            stored = indicesByKind;
+                        }
+                        FileOutputStream os = null;
+                        try {
+                            os= new FileOutputStream(data);
+                            PrintWriter writer = new PrintWriter(os);
+                            for (double d : stored) {
+                                writer.println(d);
+                            }
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } finally {
+                            if (os != null) {
+                                try {
+                                    os.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                }.start();
             }
 
             @Override
@@ -867,8 +921,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mSwitchButton.setActivated(!mSwitchButton.isActivated());
                 break;
             case R.id.exploreButton:
-                Intent intent = new Intent(this, ContainerActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(this, ContainerActivity.class));
+                break;
+            case R.id.myButton:
+                startActivity(new Intent(this, MyActivity.class));
                 break;
             default:
                 break;
