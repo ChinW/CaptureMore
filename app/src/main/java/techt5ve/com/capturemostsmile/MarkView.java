@@ -43,6 +43,7 @@ public class MarkView extends FrameLayout {
 
     public void addItem(final Mark item) {
         mMarks.add(item);
+
         final View view = LayoutInflater.from(getContext()).inflate(DEFAULT_ITEM_LAYOUT, this, false);
         ((ImageView) view.findViewById(R.id.mark_emoji)).setImageResource(item.getDrawableRes(getResources()));
         ((TextView) view.findViewById(R.id.mark_label)).setText(item.getLable(getResources()));
@@ -52,7 +53,6 @@ public class MarkView extends FrameLayout {
         view.setScaleX(0.1f);
         view.setScaleY(0.1f);
         addView(view);
-        invalidate();
 
         RectF rect = item.getRect();
         LayoutParams lp = (LayoutParams) view.getLayoutParams();
@@ -70,7 +70,7 @@ public class MarkView extends FrameLayout {
     protected void onDraw(Canvas canvas) {
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(6);
-        mPaint.setColor(ResourcesCompat.getColor(getResources(), R.color.mark_stroke, getContext().getTheme()));
+        mPaint.setColor(ResourcesCompat.getColor(getResources(), R.color.colorSecondary, getContext().getTheme()));
         for (Mark mark : mMarks) {
             canvas.drawRect(mark.getRect(), mPaint);
         }

@@ -1,5 +1,7 @@
 package techt5ve.com.capturemostsmile;
 
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -22,6 +24,7 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -112,13 +115,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageButton mUndoButton;
     private ImageButton mShareButton;
     private ImageButton mSwitchButton;
-    private CameraCaptureSession mCaptureSession;
     private BarChart mBarChart;
 
     private String mCameraId;
     private CameraDevice mCameraDevice;
+    private CameraCaptureSession mCaptureSession;
     private Size mPreviewSize;
     private boolean mFrontFacing;
+    private Dialog mProgressDialog;
 
     private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
 
@@ -259,6 +263,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mSwitchButton = (ImageButton) findViewById(R.id.switchButton);
         mSwitchButton.setOnClickListener(this);
         mBarChart = (BarChart) findViewById(R.id.barChart);
+        findViewById(R.id.exploreButton).setOnClickListener(this);
 
         mFile = new File(getExternalFilesDir(null), DEFAULT_JPG_NAME);
     }
@@ -716,6 +721,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Api.recognize(new ByteArrayInputStream(os.toByteArray()), bitmap.getWidth(), bitmap.getHeight(), new Api.RecognitionListener() {
             @Override
             public void onSuccess(List<RecognizeResult> results, int orgWidth, int orgHeight) {
+                if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                    mProgressDialog.hide();
+                }
                 mCapturedImage.setImageBitmap(bitmap);
                 showCapturedImage();
                 mMarkView.clear();
@@ -738,20 +746,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mMarkView.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        final File f = save();
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                Api.upload(f, indicesByKind);
-                            }
-                        }.start();
+                        Api.upload(save(), indicesByKind);
                     }
                 }, 2000);
             }
 
             @Override
             public void onFailure() {
+                if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                    mProgressDialog.hide();
+                }
                 mMarkView.clear();
+                showToast(getString(R.string.failure));
             }
         });
     }
@@ -829,6 +835,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.captureButton:
+                if (mProgressDialog == null) {
+                    mProgressDialog = new Dialog(this);
+                    mProgressDialog.setContentView(R.layout.progress);
+                }
+                mProgressDialog.show();
+                MediaPlayer mp = MediaPlayer.create(this, R.raw.anniu_katong4);
+                mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        mp.release();
+                    }
+                });
+                mp.start();
                 takePicture();
                 break;
             case R.id.undoButton:
@@ -846,6 +865,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
                 }
                 mSwitchButton.setActivated(!mSwitchButton.isActivated());
+                break;
+            case R.id.exploreButton:
+                Intent intent = new Intent(this, ContainerActivity.class);
+                startActivity(intent);
                 break;
             default:
                 break;

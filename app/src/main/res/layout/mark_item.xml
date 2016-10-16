@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical">
@@ -8,15 +9,17 @@
     <ImageView
         android:id="@+id/mark_emoji"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        tools:src="@drawable/happiness_6"/>
 
     <TextView
         android:id="@+id/mark_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/padding_xs"
-        android:background="@drawable/bg_white"
+        android:background="@drawable/bg_label"
         android:gravity="center"
-        android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        android:textColor="@color/colorSecondary"/>
 
 </LinearLayout>

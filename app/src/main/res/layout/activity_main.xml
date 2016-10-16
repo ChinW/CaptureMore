@@ -62,6 +62,16 @@
             android:visibility="invisible"/>
 
         <ImageButton
+            android:id="@+id/switchButton"
+            android:layout_width="@dimen/button_size_small"
+            android:layout_height="@dimen/button_size_small"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_toRightOf="@id/undoButton"
+            android:background="?selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_camera_switch"/>
+
+        <ImageButton
             android:id="@+id/shareButton"
             android:layout_width="@dimen/button_size_small"
             android:layout_height="@dimen/button_size_small"
@@ -73,14 +83,14 @@
             android:visibility="invisible"/>
 
         <ImageButton
-            android:id="@+id/switchButton"
+            android:id="@+id/exploreButton"
             android:layout_width="@dimen/button_size_small"
             android:layout_height="@dimen/button_size_small"
             android:layout_centerVertical="true"
             android:layout_marginRight="@dimen/activity_horizontal_margin"
             android:layout_toLeftOf="@id/shareButton"
             android:background="?selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_camera_switch"/>
+            android:src="@drawable/ic_explore_24dp"/>
 
     </RelativeLayout>
 

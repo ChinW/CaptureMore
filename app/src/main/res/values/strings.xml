@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">CaptureMostSmile</string>
     <string name="request_permission">permission</string>
+    <string name="recognizing">正在识别</string>
+    <string name="failure">真的有人吗,您不要骗我</string>
 </resources>

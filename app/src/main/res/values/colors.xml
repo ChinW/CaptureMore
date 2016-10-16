@@ -3,6 +3,6 @@
     <color name="colorPrimary">#666666</color>
     <color name="colorPrimaryDark">#333333</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="colorSecondary">#FFFFB500</color>
     <color name="light_grey">#FFDDDDDD</color>
-    <color name="mark_stroke">#FFFFB500</color>
 </resources>
