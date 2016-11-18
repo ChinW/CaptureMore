@@ -1,7 +1,7 @@
 package techt5ve.com.capturemostsmile;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -22,8 +22,13 @@ public class ContainerActivity extends AppCompatActivity {
         WebViewClient client = new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                view.loadUrl(request.getUrl().toString());
-                return true;
+                String url = request.getUrl().toString();
+                if (url.startsWith(URL)) {
+                    view.loadUrl(request.getUrl().toString());
+                    return true;
+                } else {
+                    return false;
+                }
             }
         };
         WebSettings settings = mWebView.getSettings();

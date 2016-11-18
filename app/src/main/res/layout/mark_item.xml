@@ -19,7 +19,7 @@
         android:layout_marginTop="@dimen/padding_xs"
         android:background="@drawable/bg_label"
         android:gravity="center"
-        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textAppearance="@style/TextAppearance.AppCompat"
         android:textColor="@color/colorSecondary"/>
 
     

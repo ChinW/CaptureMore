@@ -1,10 +1,8 @@
 package techt5ve.com.capturemostsmile;
 
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -30,7 +28,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -49,21 +46,22 @@ import com.microsoft.projectoxford.emotion.contract.RecognizeResult;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action0;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -715,97 +713,70 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void recognize(final File file) {
+    private void recognize(byte[] data) {
+        // compress the bitmap
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = 4;
-        final Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-        if (bitmap == null) {
+        final Bitmap thumbnail = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+        if (thumbnail == null) {
             return;
         }
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, os);
-        Api.recognize(new ByteArrayInputStream(os.toByteArray()), bitmap.getWidth(), bitmap.getHeight(), new Api.RecognitionListener() {
-            @Override
-            public void onSuccess(List<RecognizeResult> results, int orgWidth, int orgHeight) {
-                if (mProgressDialog != null && mProgressDialog.isShowing()) {
-                    mProgressDialog.hide();
-                }
-                mCapturedImage.setImageBitmap(bitmap);
-                showCapturedImage();
-                mMarkView.clear();
-                final float scale = (float) mMarkView.getWidth() / orgWidth;
-                final double[] indicesByKind = {0, 0, 0, 0, 0, 0, 0, 0};
-                for (RecognizeResult result : results) {
-                    Log.d(TAG, "onSuccess: " + result.faceRectangle.left + ", " + result.faceRectangle.top);
-                    mMarkView.addItem(new Mark(result, scale));
-                    indicesByKind[0] += result.scores.anger;
-                    indicesByKind[1] += result.scores.contempt;
-                    indicesByKind[2] += result.scores.disgust;
-                    indicesByKind[3] += result.scores.fear;
-                    indicesByKind[4] += result.scores.happiness;
-                    indicesByKind[5] += result.scores.neutral;
-                    indicesByKind[6] += result.scores.sadness;
-                    indicesByKind[7] += result.scores.surprise;
-                }
-                mBarChart.setValues(indicesByKind);
+        final int thumbnailWidth = thumbnail.getWidth();
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        thumbnail.compress(Bitmap.CompressFormat.JPEG, 80, byteStream);
 
-                mMarkView.postDelayed(new Runnable() {
+        Api.recognize(new ByteArrayInputStream(byteStream.toByteArray()))
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .doOnTerminate(new Action0() {
                     @Override
-                    public void run() {
-                        Api.upload(save(), indicesByKind);
+                    public void call() {
+                        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                            mProgressDialog.hide();
+                        }
                     }
-                }, 2000);
-
-                new Thread() {
+                })
+                .subscribe(new Subscriber<List<RecognizeResult>>() {
                     @Override
-                    public void run() {
+                    public void onCompleted() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        mMarkView.clear();
+                        showToast(getString(R.string.failure));
+                    }
+
+                    @Override
+                    public void onNext(List<RecognizeResult> results) {
+                        mCapturedImage.setImageBitmap(thumbnail);
+                        showCapturedImage();
+                        mMarkView.clear();
+                        final float scale = (float) mMarkView.getWidth() / thumbnailWidth;
+                        final double[] indicesByKind = {0, 0, 0, 0, 0, 0, 0, 0};
+                        for (RecognizeResult result : results) {
+                            mMarkView.addItem(new Mark(result, scale));
+                            indicesByKind[0] += result.scores.anger;
+                            indicesByKind[1] += result.scores.contempt;
+                            indicesByKind[2] += result.scores.disgust;
+                            indicesByKind[3] += result.scores.fear;
+                            indicesByKind[4] += result.scores.happiness;
+                            indicesByKind[5] += result.scores.neutral;
+                            indicesByKind[6] += result.scores.sadness;
+                            indicesByKind[7] += result.scores.surprise;
+                        }
+                        mBarChart.setValues(indicesByKind);
+
+                        mMarkView.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                Api.upload(save(), indicesByKind);
+                            }
+                        }, 2000);
+
                         File data = new File(getExternalFilesDir(null), "data");
-                        double[] stored = {0, 0, 0, 0, 0, 0, 0, 0};
-                        if (data.exists()) {
-                            Scanner scanner = null;
-                            try {
-                                scanner = new Scanner(new FileInputStream(data));
-                                for (int i = 0; scanner.hasNextDouble() && i < stored.length; i++) {
-                                    stored[i] = scanner.nextDouble();
-                                    stored[i] += indicesByKind[i];
-                                }
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
-                                stored = indicesByKind;
-                            } finally {
-                                if (scanner != null) {
-                                    scanner.close();
-                                }
-                            }
-                        } else {
-                            stored = indicesByKind;
-                        }
-                        PrintWriter writer = null;
-                        try {
-                            writer = new PrintWriter(new FileOutputStream(data));
-                            for (double d : stored) {
-                                writer.println(d);
-                            }
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        } finally {
-                            if (writer != null) {
-                                writer.close();
-                            }
-                        }
+                        Api.writeRecord(data, indicesByKind).subscribeOn(Schedulers.io());
                     }
-                }.start();
-            }
-
-            @Override
-            public void onFailure() {
-                if (mProgressDialog != null && mProgressDialog.isShowing()) {
-                    mProgressDialog.hide();
-                }
-                mMarkView.clear();
-                showToast(getString(R.string.failure));
-            }
-        });
+                });
     }
 
     private File save() {
@@ -967,6 +938,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
+
             FileOutputStream output = null;
             try {
                 output = new FileOutputStream(mFile);
@@ -982,13 +954,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         e.printStackTrace();
                     }
                 }
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        recognize(mFile);
-                    }
-                });
             }
+            recognize(bytes);
         }
 
     }

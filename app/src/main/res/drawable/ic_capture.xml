@@ -10,7 +10,7 @@
             <item android:bottom="@dimen/padding_middle" android:left="@dimen/padding_middle"
                   android:right="@dimen/padding_middle" android:top="@dimen/padding_middle">
                 <shape android:shape="oval">
-                    <solid android:color="@color/light_grey"/>
+                    <solid android:color="@color/colorSecondary"/>
                 </shape>
             </item>
         </layer-list>

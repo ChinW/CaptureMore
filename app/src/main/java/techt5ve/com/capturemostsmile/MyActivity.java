@@ -1,7 +1,7 @@
 package techt5ve.com.capturemostsmile;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.ViewGroup;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -9,8 +9,6 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Scanner;
 
 public class MyActivity extends AppCompatActivity {

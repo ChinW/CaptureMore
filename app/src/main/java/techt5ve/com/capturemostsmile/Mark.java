@@ -2,13 +2,9 @@ package techt5ve.com.capturemostsmile;
 
 import android.content.res.Resources;
 import android.graphics.RectF;
-import android.icu.text.DateFormat;
 import android.support.annotation.DrawableRes;
 
 import com.microsoft.projectoxford.emotion.contract.RecognizeResult;
-import com.microsoft.projectoxford.emotion.contract.Scores;
-
-import java.lang.reflect.Field;
 
 /**
  * Created by Shaoxing on 10/15/16.

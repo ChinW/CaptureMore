@@ -46,9 +46,8 @@
             android:layout_width="@dimen/btn_lg"
             android:layout_height="@dimen/btn_lg"
             android:layout_centerInParent="true"
-            android:background="@null"
-            android:foreground="?selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_capture"/>
+            android:background="@drawable/ic_capture"
+            android:foreground="?selectableItemBackgroundBorderless"/>
 
         <ImageButton
             android:id="@+id/undoButton"
